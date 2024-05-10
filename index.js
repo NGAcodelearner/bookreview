@@ -1,8 +1,9 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const session = require("express-session");
-const customer_routes = require("./router/auth_users.js").authenticated;
-const genl_routes = require("./router/general.js").general;
+
+const public_routes = require("./routers/general.js");
+const customer_routes = require("./routers/auth_user.js").authenticated;
 
 const app = express();
 
@@ -18,15 +19,16 @@ app.use(
 );
 
 app.use("/customer/auth/*", function auth(req, res, next) {
-  //get the authorization details from the session and verifies it.
   if (req.session.authorization) {
-    token = req.session.authorization["accesstoken"];
-    jwt.verify(token, "access", (error, user) => {
-      if (!error) {
+    //get the authorization object stored in the session
+    token = req.session.authorization["accessToken"]; //retrieve the token from authorization object
+    jwt.verify(token, "access", (err, user) => {
+      //Use JWT to verify token
+      if (!err) {
         req.user = user;
         next();
       } else {
-        return res.status(403).json({ message: "User is not authenticated" });
+        return res.status(403).json({ message: "User not authenticated" });
       }
     });
   } else {
@@ -34,9 +36,9 @@ app.use("/customer/auth/*", function auth(req, res, next) {
   }
 });
 
-const PORT = 8000;
+const PORT = 5000;
 
 app.use("/customer", customer_routes);
-app.use("/", genl_routes);
+app.use("/", public_routes);
 
 app.listen(PORT, () => console.log("Server is running"));
